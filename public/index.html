@@ -265,8 +265,8 @@ select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xm
       <div class="lc-lt">Watch Guard</div>
     </div>
     <div class="lc-tog">
-      <button class="active" onclick="this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">Admin Login</button>
-      <button onclick="this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active')">User Login</button>
+      <button class="active" onclick="this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active');$('#login-user').value='admin';$('#login-pass').value='admin123'">Admin Login</button>
+      <button onclick="this.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('active'));this.classList.add('active');$('#login-user').value='amit.kumar';$('#login-pass').value='password123'">User Login</button>
     </div>
     <div class="fg">
       <label>Username</label>
@@ -278,7 +278,7 @@ select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xm
     </div>
     <button class="btn btn-p" id="login-btn" onclick="doLogin()"><i class="fas fa-right-to-bracket"></i> Sign In</button>
     <div class="login-error" id="login-error"></div>
-    <div class="flink">Default: <strong>admin</strong> / <strong>admin123</strong></div>
+    <div class="flink">Admin: <strong>admin</strong> / <strong>admin123</strong> &bull; User: <strong>amit.kumar</strong> / <strong>password123</strong></div>
   </div>
 </div>
 
@@ -294,15 +294,15 @@ select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xm
     <nav class="sb-nav">
       <div class="ns"><div class="ns-t">Main</div>
         <div class="ni active" data-page="dashboard"><i class="fas fa-grip"></i> Dashboard</div>
-        <div class="ni" data-page="recognition"><i class="fas fa-camera"></i> Face Recognition</div>
+        <div class="ni admin-only" data-page="recognition"><i class="fas fa-camera"></i> Face Recognition</div>
         <div class="ni" data-page="attendance"><i class="fas fa-clipboard-list"></i> Attendance Logs</div>
       </div>
-      <div class="ns"><div class="ns-t">Management</div>
-        <div class="ni" data-page="addface"><i class="fas fa-user-plus"></i> Add New Face</div>
-        <div class="ni" data-page="approval"><i class="fas fa-check-double"></i> Approval Panel <span class="badge" id="pending-badge" style="display:none">0</span></div>
-        <div class="ni" data-page="profile"><i class="fas fa-id-card"></i> Profile</div>
+      <div class="ns admin-only"><div class="ns-t">Management</div>
+        <div class="ni admin-only" data-page="addface"><i class="fas fa-user-plus"></i> Add New Face</div>
+        <div class="ni admin-only" data-page="approval"><i class="fas fa-check-double"></i> Approval Panel <span class="badge" id="pending-badge" style="display:none">0</span></div>
       </div>
-      <div class="ns"><div class="ns-t">System</div>
+      <div class="ns"><div class="ns-t">Account</div>
+        <div class="ni" data-page="profile"><i class="fas fa-id-card"></i> Profile</div>
         <div class="ni" onclick="doLogout()"><i class="fas fa-right-from-bracket"></i> Logout</div>
       </div>
     </nav>
@@ -329,43 +329,82 @@ select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xm
 
     <!-- ====== DASHBOARD ====== -->
     <div class="page active" id="pg-dashboard">
-      <div class="stats fade-in" id="stats-grid"></div>
-      <div class="g21 fade-in">
-        <div class="card">
-          <div class="card-hd">
-            <div class="card-t"><i class="fas fa-video" style="margin-right:8px;color:var(--ac)"></i>Live Camera Feed</div>
-            <span class="badge-s ok"><span class="d"></span>Live</span>
-          </div>
-          <div class="card-bd" style="padding:12px">
-            <div class="live-feed" id="dash-feed-container">
-              <video id="dash-video" autoplay muted playsinline style="width:100%;border-radius:var(--rs)"></video>
-              <canvas id="dash-canvas"></canvas>
-              <div class="feed-status"><span class="badge-s ok" id="dash-feed-status"><span class="d"></span><span>Scanning...</span></span></div>
-              <div class="feed-time" id="dash-time">--:--:--</div>
-              <div class="feed-overlay">
-                <div id="dash-detection-info" style="font-size:12px;color:var(--t2)">Waiting for detection...</div>
+      <!-- ADMIN DASHBOARD -->
+      <div id="admin-dashboard" style="display:none">
+        <div class="stats fade-in" id="stats-grid"></div>
+        <div class="g21 fade-in">
+          <div class="card">
+            <div class="card-hd">
+              <div class="card-t"><i class="fas fa-video" style="margin-right:8px;color:var(--ac)"></i>Live Camera Feed</div>
+              <span class="badge-s ok"><span class="d"></span>Live</span>
+            </div>
+            <div class="card-bd" style="padding:12px">
+              <div class="live-feed" id="dash-feed-container">
+                <video id="dash-video" autoplay muted playsinline style="width:100%;border-radius:var(--rs)"></video>
+                <canvas id="dash-canvas"></canvas>
+                <div class="feed-status"><span class="badge-s ok" id="dash-feed-status"><span class="d"></span><span>Scanning...</span></span></div>
+                <div class="feed-time" id="dash-time">--:--:--</div>
+                <div class="feed-overlay">
+                  <div id="dash-detection-info" style="font-size:12px;color:var(--t2)">Waiting for detection...</div>
+                </div>
               </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div class="card">
+              <div class="card-hd"><div class="card-t">Quick Actions</div></div>
+              <div class="card-bd">
+                <div class="act-grid">
+                  <div class="act-card" data-page="addface"><i class="fas fa-user-plus"></i><span>Add New Face</span></div>
+                  <div class="act-card" data-page="attendance"><i class="fas fa-clipboard-list"></i><span>View Logs</span></div>
+                  <div class="act-card" data-page="approval"><i class="fas fa-users-gear"></i><span>Manage Users</span></div>
+                  <div class="act-card" data-page="recognition"><i class="fas fa-expand"></i><span>Full Recognition</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card" style="flex:1">
+              <div class="card-hd">
+                <div class="card-t">Notifications</div>
+                <span style="font-size:12px;color:var(--acl);cursor:pointer" onclick="loadNotifications()">Refresh</span>
+              </div>
+              <div class="card-bn" id="notif-list" style="max-height:340px;overflow-y:auto"></div>
             </div>
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:20px">
+      </div>
+
+      <!-- USER DASHBOARD -->
+      <div id="user-dashboard" style="display:none">
+        <div class="stats fade-in" id="user-stats-grid"></div>
+        <div class="g21 fade-in">
           <div class="card">
-            <div class="card-hd"><div class="card-t">Quick Actions</div></div>
-            <div class="card-bd">
-              <div class="act-grid">
-                <div class="act-card" data-page="addface"><i class="fas fa-user-plus"></i><span>Add New Face</span></div>
-                <div class="act-card" data-page="attendance"><i class="fas fa-clipboard-list"></i><span>View Logs</span></div>
-                <div class="act-card" data-page="approval"><i class="fas fa-users-gear"></i><span>Manage Users</span></div>
-                <div class="act-card" data-page="recognition"><i class="fas fa-expand"></i><span>Full Recognition</span></div>
-              </div>
+            <div class="card-hd">
+              <div class="card-t"><i class="fas fa-calendar-check" style="margin-right:8px;color:var(--ac)"></i>My Recent Attendance</div>
+              <span style="font-size:12px;color:var(--acl);cursor:pointer" onclick="loadUserDashboard()">Refresh</span>
+            </div>
+            <div class="card-bn" style="overflow-x:auto">
+              <table class="dt">
+                <thead><tr><th>Date</th><th>Time In</th><th>Time Out</th><th>Location</th><th>Status</th></tr></thead>
+                <tbody id="user-recent-tbody"><tr><td colspan="5" style="text-align:center;padding:40px;color:var(--t3)">Loading...</td></tr></tbody>
+              </table>
             </div>
           </div>
-          <div class="card" style="flex:1">
-            <div class="card-hd">
-              <div class="card-t">Notifications</div>
-              <span style="font-size:12px;color:var(--acl);cursor:pointer" onclick="loadNotifications()">Refresh</span>
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div class="card">
+              <div class="card-hd"><div class="card-t"><i class="fas fa-user" style="margin-right:8px;color:var(--ac)"></i>My Info</div></div>
+              <div class="card-bd" id="user-info-card">
+                <div style="text-align:center;padding:20px;color:var(--t3)">Loading...</div>
+              </div>
             </div>
-            <div class="card-bn" id="notif-list" style="max-height:340px;overflow-y:auto"></div>
+            <div class="card">
+              <div class="card-hd"><div class="card-t">Quick Actions</div></div>
+              <div class="card-bd">
+                <div class="act-grid">
+                  <div class="act-card" data-page="attendance"><i class="fas fa-clipboard-list"></i><span>My Attendance</span></div>
+                  <div class="act-card" data-page="profile"><i class="fas fa-id-card"></i><span>My Profile</span></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -481,7 +520,7 @@ select.fi{cursor:pointer;appearance:none;background-image:url("data:image/svg+xm
     <!-- ====== ATTENDANCE ====== -->
     <div class="page" id="pg-attendance">
       <div class="fade-in">
-        <div class="filter-bar">
+        <div class="filter-bar admin-filter-bar">
           <div class="fii"><i class="fas fa-search"></i><input type="text" class="fi" id="att-search" placeholder="Search name or ID..." style="padding-left:36px;min-width:200px" oninput="loadAttendance()"></div>
           <select class="fi" id="att-status" style="min-width:130px" onchange="loadAttendance()"><option value="all">All Status</option><option value="present">Present</option><option value="late">Late</option><option value="absent">Absent</option></select>
           <select class="fi" id="att-dept" style="min-width:140px" onchange="loadAttendance()"><option value="all">All Depts</option><option>Computer Science</option><option>Electronics</option><option>Mechanical</option><option>Civil</option><option>Administration</option></select>
@@ -669,7 +708,7 @@ function navigateTo(screenId) {
 }
 
 const pageConfig = {
-  dashboard: ['Dashboard', 'Real-time monitoring overview'],
+  dashboard: ['Dashboard', ''],
   recognition: ['Face Recognition', 'Live detection & verification'],
   addface: ['Add New Face', 'Register a new person to the system'],
   approval: ['Admin Approval', 'Review and manage registration requests'],
@@ -678,6 +717,12 @@ const pageConfig = {
 };
 
 function switchPage(pageId) {
+  // Block non-admin from admin-only pages  
+  if (!isAdmin() && ['recognition', 'addface', 'approval'].includes(pageId)) {
+    showToast('Admin access required', 'error');
+    pageId = 'dashboard';
+  }
+
   // Stop all cameras except the page we're going to
   if (pageId !== 'dashboard') stopDashCamera();
   if (pageId !== 'recognition') stopRecCamera();
@@ -692,10 +737,20 @@ function switchPage(pageId) {
   });
   const [title, sub] = pageConfig[pageId] || ['', ''];
   $('#pg-title').textContent = title;
-  $('#pg-sub').textContent = sub;
+  // Adjust subtitle based on role
+  if (pageId === 'dashboard') {
+    $('#pg-sub').textContent = isAdmin() ? 'Real-time monitoring overview' : 'Your personal overview';
+  } else if (pageId === 'attendance') {
+    $('#pg-sub').textContent = isAdmin() ? 'Track entries, exits, and attendance' : 'Your attendance history';
+  } else {
+    $('#pg-sub').textContent = sub;
+  }
 
   // Load page data
-  if (pageId === 'dashboard') { loadDashboard(); startDashCamera(); }
+  if (pageId === 'dashboard') {
+    if (isAdmin()) { loadDashboard(); startDashCamera(); }
+    else { loadUserDashboard(); }
+  }
   if (pageId === 'recognition') {}
   if (pageId === 'addface') {}
   if (pageId === 'approval') loadApproval();
@@ -724,6 +779,7 @@ async function doLogin() {
     currentUser = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ username: user, password: pass }) });
     errEl.style.display = 'none';
     await loadKnownFaces();
+    applyRoleUI();
     navigateTo('dashboard');
     updateSidebarUser();
     showToast('Welcome, ' + currentUser.full_name + '!', 'ok');
@@ -747,6 +803,26 @@ function updateSidebarUser() {
   $('#sb-av-init').textContent = initials(currentUser.full_name);
   $('#sb-uname').textContent = currentUser.full_name;
   $('#sb-urole').textContent = currentUser.role === 'admin' ? 'System Admin' : currentUser.user_type;
+}
+
+function isAdmin() { return currentUser && currentUser.role === 'admin'; }
+
+function applyRoleUI() {
+  // Show/hide admin-only elements
+  $$('.admin-only').forEach(el => {
+    el.style.display = isAdmin() ? '' : 'none';
+  });
+  // Show correct dashboard
+  $('#admin-dashboard').style.display = isAdmin() ? 'block' : 'none';
+  $('#user-dashboard').style.display = isAdmin() ? 'none' : 'block';
+  // Hide notification bell & search from non-admin topbar  
+  $$('.notif-btn').forEach(el => {
+    el.style.display = isAdmin() ? '' : 'none';
+  });
+  // Hide advanced filter bar for non-admin
+  $$('.admin-filter-bar').forEach(el => {
+    el.style.display = isAdmin() ? '' : 'none';
+  });
 }
 
 // ===================================================================
@@ -797,6 +873,83 @@ async function loadDashboard() {
     }
     loadNotifications();
   } catch (err) { console.error(err); }
+}
+
+// User-specific dashboard
+async function loadUserDashboard() {
+  try {
+    const [myStats, me] = await Promise.all([
+      api('/api/dashboard/my-stats'),
+      api('/api/auth/me')
+    ]);
+
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    $('#user-stats-grid').innerHTML = `
+      <div class="sc"><div class="sc-icon ${myStats.checkedInToday ? 'green' : 'red'}"><i class="fas fa-${myStats.checkedInToday ? 'check-circle' : 'clock'}"></i></div><div class="sc-val">${myStats.checkedInToday ? 'Checked In' : 'Not Yet'}</div><div class="sc-lbl">Today's Status</div></div>
+      <div class="sc"><div class="sc-icon green"><i class="fas fa-calendar-check"></i></div><div class="sc-val">${myStats.monthPresent}</div><div class="sc-lbl">Days Present (This Month)</div></div>
+      <div class="sc"><div class="sc-icon yellow"><i class="fas fa-clock"></i></div><div class="sc-val">${myStats.monthLate}</div><div class="sc-lbl">Days Late (This Month)</div></div>
+      <div class="sc"><div class="sc-icon blue"><i class="fas fa-chart-pie"></i></div><div class="sc-val">${myStats.totalDaysThisMonth > 0 ? ((myStats.monthPresent / myStats.totalDaysThisMonth) * 100).toFixed(0) + '%' : '—'}</div><div class="sc-lbl">Attendance Rate</div></div>
+    `;
+
+    // Recent attendance table
+    if (myStats.recentAttendance.length === 0) {
+      $('#user-recent-tbody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--t3)">No attendance records yet</td></tr>';
+    } else {
+      $('#user-recent-tbody').innerHTML = myStats.recentAttendance.map(r => `
+        <tr>
+          <td>${r.date}</td>
+          <td>${r.time_in || '—'}</td>
+          <td>${r.time_out || '—'}</td>
+          <td>${r.location || '—'}</td>
+          <td><span class="badge-s ${r.status === 'present' ? 'ok' : r.status === 'late' ? 'warn' : 'err'}"><span class="d"></span>${r.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    // User info card
+    $('#user-info-card').innerHTML = `
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--ac),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;overflow:hidden">
+          ${me.face_image ? `<img src="${me.face_image}" style="width:100%;height:100%;object-fit:cover">` : initials(me.full_name)}
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:700">${me.full_name}</div>
+          <div style="font-size:12px;color:var(--t2)">${me.user_type} &bull; ${me.department}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="padding:10px;background:var(--inp);border-radius:var(--rs);border:1px solid var(--brd)">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px">ID Code</div>
+          <div style="font-size:13px;font-weight:600;margin-top:2px">${me.user_id_code}</div>
+        </div>
+        <div style="padding:10px;background:var(--inp);border-radius:var(--rs);border:1px solid var(--brd)">
+          <div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px">Face ID</div>
+          <div style="font-size:13px;font-weight:600;margin-top:2px;color:${me.face_image ? 'var(--ok)' : 'var(--warn)'}">${me.face_image ? 'Enrolled' : 'Not Set'}</div>
+        </div>
+      </div>
+      ${myStats.checkedInToday && myStats.todayRecord ? `
+        <div style="margin-top:14px;padding:12px;background:var(--okb);border:1px solid var(--ok);border-radius:var(--rs);display:flex;align-items:center;gap:10px">
+          <i class="fas fa-check-circle" style="font-size:18px;color:var(--ok)"></i>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--ok)">Checked in today at ${myStats.todayRecord.time_in}</div>
+            <div style="font-size:11px;color:var(--t3)">Location: ${myStats.todayRecord.location}</div>
+          </div>
+        </div>
+      ` : `
+        <div style="margin-top:14px;padding:12px;background:var(--warnb);border:1px solid var(--warn);border-radius:var(--rs);display:flex;align-items:center;gap:10px">
+          <i class="fas fa-exclamation-triangle" style="font-size:18px;color:var(--warn)"></i>
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--warn)">Not checked in yet</div>
+            <div style="font-size:11px;color:var(--t3)">${today}</div>
+          </div>
+        </div>
+      `}
+    `;
+  } catch (err) {
+    console.error(err);
+    showToast('Failed to load dashboard', 'error');
+  }
 }
 
 async function loadNotifications() {

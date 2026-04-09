@@ -168,18 +168,38 @@ app.get('/api/dashboard/stats', requireAuth, (req, res) => {
   });
 });
 
+// User-specific dashboard stats
+app.get('/api/dashboard/my-stats', requireAuth, (req, res) => {
+  const userId = req.session.userId;
+  const today = new Date().toISOString().slice(0, 10);
+  const month = today.slice(0, 7); // YYYY-MM
+  const todayRecord = db.prepare('SELECT * FROM attendance WHERE user_id=? AND date=? ORDER BY created_at DESC LIMIT 1').get(userId, today);
+  const monthPresent = db.prepare("SELECT COUNT(*) as c FROM attendance WHERE user_id=? AND date LIKE ? AND status='present'").get(userId, month + '%').c;
+  const monthLate = db.prepare("SELECT COUNT(*) as c FROM attendance WHERE user_id=? AND date LIKE ? AND status='late'").get(userId, month + '%').c;
+  const totalDays = db.prepare('SELECT COUNT(DISTINCT date) as c FROM attendance WHERE user_id=? AND date LIKE ?').get(userId, month + '%').c;
+  const recentAttendance = db.prepare('SELECT a.*, u.full_name, u.user_id_code FROM attendance a JOIN users u ON a.user_id=u.id WHERE a.user_id=? ORDER BY a.date DESC, a.created_at DESC LIMIT 7').all(userId);
+  res.json({
+    checkedInToday: !!todayRecord,
+    todayRecord: todayRecord || null,
+    monthPresent,
+    monthLate,
+    totalDaysThisMonth: totalDays,
+    recentAttendance
+  });
+});
+
 // ===================== USERS =====================
 app.get('/api/users', requireAuth, (req, res) => {
   const users = db.prepare("SELECT id,username,full_name,email,phone,role,user_type,department,user_id_code,status,face_image,created_at FROM users WHERE status='approved' ORDER BY created_at DESC").all();
   res.json(users);
 });
 
-app.get('/api/users/pending', requireAuth, (req, res) => {
+app.get('/api/users/pending', requireAdmin, (req, res) => {
   const users = db.prepare("SELECT id,username,full_name,email,phone,role,user_type,department,user_id_code,status,face_image,created_at FROM users WHERE status='pending' ORDER BY created_at DESC").all();
   res.json(users);
 });
 
-app.get('/api/users/processed', requireAuth, (req, res) => {
+app.get('/api/users/processed', requireAdmin, (req, res) => {
   const users = db.prepare("SELECT id,username,full_name,email,phone,role,user_type,department,user_id_code,status,updated_at FROM users WHERE status IN ('approved','rejected') AND role != 'admin' ORDER BY updated_at DESC LIMIT 5").all();
   res.json(users);
 });
@@ -276,7 +296,19 @@ app.post('/api/faces/alert', requireAuth, (req, res) => {
 });
 
 // ===================== ATTENDANCE =====================
+// User's own attendance
+app.get('/api/attendance/mine', requireAuth, (req, res) => {
+  const userId = req.session.userId;
+  const records = db.prepare('SELECT a.*, u.full_name, u.user_id_code, u.department, u.user_type FROM attendance a JOIN users u ON a.user_id=u.id WHERE a.user_id=? ORDER BY a.date DESC, a.created_at DESC LIMIT 50').all(userId);
+  res.json({ records, total: records.length });
+});
+
 app.get('/api/attendance', requireAuth, (req, res) => {
+  // Non-admin users can only see their own attendance
+  if (req.session.role !== 'admin') {
+    const records = db.prepare('SELECT a.*, u.full_name, u.user_id_code, u.department, u.user_type FROM attendance a JOIN users u ON a.user_id=u.id WHERE a.user_id=? ORDER BY a.date DESC, a.created_at DESC LIMIT 50').all(req.session.userId);
+    return res.json({ records, total: records.length });
+  }
   const { date, status, search, department } = req.query;
   let sql = `SELECT a.*, u.full_name, u.user_id_code, u.department, u.user_type FROM attendance a JOIN users u ON a.user_id=u.id WHERE 1=1`;
   const params = [];
